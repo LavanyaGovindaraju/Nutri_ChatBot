@@ -53,7 +53,7 @@ class RAGPipeline:
         context = " ".join(retrieved_texts)
 
         # 2. Build a smaller prompt
-        prompt = f"Context:\n{context}\n\nQuestion: {query}\n\nAnswer:"
+        prompt = f"Answer the following question based on the provided context.\n\nQuestion: {query}\nAnswer:"
 
         # 3. Generate a short, deterministic answer
         outputs = self.generator(
