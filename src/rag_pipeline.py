@@ -20,7 +20,7 @@ class RAGPipeline:
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModelForCausalLM.from_pretrained(
             model_name,
-            device_map="auto" if self.device == "cuda" else None,
+            device_map="auto",
             torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
             trust_remote_code=True
         )
@@ -29,7 +29,7 @@ class RAGPipeline:
             "text-generation",
             model=self.model,
             tokenizer=self.tokenizer,
-            device=0 if self.device == "cuda" else -1
+            device_map="auto",
         )
 
         print("[INFO] RAG Pipeline initialized with TinyLlama (optimized mode).")
