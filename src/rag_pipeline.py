@@ -15,11 +15,13 @@ class RAGPipeline:
         self.vector_store = VectorStore(embedding_dim=embedding_dim)
 
         print(f"[INFO] Loading model {model_name}...")
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModelForCausalLM.from_pretrained(
             model_name,
-            device_map="auto",
-            torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
+            device_map="auto" if self.device == "cuda" else None,
+            torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
             trust_remote_code=True
         )
 
@@ -27,7 +29,7 @@ class RAGPipeline:
             "text-generation",
             model=self.model,
             tokenizer=self.tokenizer,
-            device_map="auto"
+            device=0 if self.device == "cuda" else -1
         )
 
         print("[INFO] RAG Pipeline initialized with TinyLlama (optimized mode).")
@@ -60,9 +62,6 @@ class RAGPipeline:
             do_sample=False,
             temperature=0.7
         )
-    
-
-
         generated_text = outputs[0]["generated_text"]
         answer = generated_text.replace(prompt, "").strip()
         return answer

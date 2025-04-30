@@ -3,6 +3,7 @@
 from sentence_transformers import SentenceTransformer
 from typing import List
 import numpy as np
+import torch
 
 class TextEmbedder:
     """
@@ -14,7 +15,8 @@ class TextEmbedder:
         Args:
             model_name (str): Pretrained model from sentence-transformers to use.
         """
-        self.model = SentenceTransformer(model_name)
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.model = SentenceTransformer(model_name, device=self.device)
 
     def embed(self, texts: List[str]) -> np.ndarray:
         """
