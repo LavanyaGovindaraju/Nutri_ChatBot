@@ -10,15 +10,14 @@ from src.rag_pipeline import RAGPipeline
 # ---------------------- UI CONFIGURATION ----------------------
 st.set_page_config(
     page_title="NutriBot - Your Nutrition Assistant",
-    page_icon="🥦",
+    page_icon="🥑",
     layout="centered",
     initial_sidebar_state="auto"
 )
 
 # Header with branding
-st.image("https://cdn-icons-png.flaticon.com/512/2909/2909769.png", width=60)
 st.markdown("""
-# 🥦 NutriBot
+# 🥑 NutriBot
 Your personalized assistant for understanding human nutrition.
 """)
 st.divider()
@@ -28,7 +27,7 @@ MODEL_OPTIONS = {
     "TinyLlama (Fastest)": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
     "Phi-2 (Mid-size)": "microsoft/phi-2",
     "Falcon-7B-Instruct (Larger)": "tiiuae/falcon-7b-instruct",
-    "Mistral-7B-Instruct (Gated)": "mistralai/Mistral-7B-Instruct-v0.1"
+    # "Mistral-7B-Instruct (Gated)": "mistralai/Mistral-7B-Instruct-v0.1"
 }
 
 with st.sidebar:
@@ -77,11 +76,16 @@ if query:
     with st.spinner("NutriBot is thinking..."):
         query_embedding = embedder.encode([query])
         answer = rag_pipeline.generate_answer(query, query_embedding, doc_embeddings, doc_chunks, top_k=top_k)
-        st.session_state.chat_history.append((query, answer))
+        retrieved_contexts = rag_pipeline.retrieve(query_embedding, doc_embeddings, doc_chunks, top_k=top_k)
+        st.session_state.chat_history.append((query, answer, retrieved_contexts))
 
 # Display prior chat
-for user_q, bot_a in st.session_state.chat_history:
+for user_q, bot_a, contexts in st.session_state.chat_history:
     with st.chat_message("user"):
         st.markdown(f"**You:** {user_q}")
     with st.chat_message("assistant"):
         st.markdown(f"**NutriBot:** {bot_a}")
+        with st.expander("🔍 Show retrieved context"):
+            for i, ctx in enumerate(contexts):
+                short_ctx = ctx[:400] + "..." if len(ctx) > 400 else ctx
+                st.markdown(f"<div style='margin-bottom:1em;padding:0.5em;border-left:3px solid #4CAF50;background-color:#f9f9f9;'> <b>Context {i+1}:</b><br>{short_ctx}</div>", unsafe_allow_html=True)
