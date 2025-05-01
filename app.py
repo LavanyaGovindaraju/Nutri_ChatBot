@@ -7,21 +7,38 @@ from src.chunker import SentenceChunker
 from src.embedder import TextEmbedder
 from src.rag_pipeline import RAGPipeline
 
+# ---------------------- UI CONFIGURATION ----------------------
+st.set_page_config(
+    page_title="NutriBot - Your Nutrition Assistant",
+    page_icon="🥦",
+    layout="centered",
+    initial_sidebar_state="auto"
+)
+
+# Header with branding
+st.image("https://cdn-icons-png.flaticon.com/512/2909/2909769.png", width=60)
+st.markdown("""
+# 🥦 NutriBot
+Your personalized assistant for understanding human nutrition.
+""")
+st.divider()
+
+# ---------------------- MODEL SELECTION ----------------------
 MODEL_OPTIONS = {
     "TinyLlama (Fastest)": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
     "Phi-2 (Mid-size)": "microsoft/phi-2",
     "Falcon-7B-Instruct (Larger)": "tiiuae/falcon-7b-instruct",
-    # Uncomment below if authenticated for gated models:
-    # "Mistral-7B-Instruct (Gated)": "mistralai/Mistral-7B-Instruct-v0.1"
+    "Mistral-7B-Instruct (Gated)": "mistralai/Mistral-7B-Instruct-v0.1"
 }
 
-st.set_page_config(page_title="NutriBot", layout="centered")
-st.title("🥦 NutriBot - Your Nutrition Assistant")
+with st.sidebar:
+    st.markdown("### ⚙️ Settings")
+    selected_model_name = st.selectbox("Choose a model:", list(MODEL_OPTIONS.keys()))
+    selected_model = MODEL_OPTIONS[selected_model_name]
+    top_k = st.slider("# of contexts to retrieve:", 1, 10, 3)
 
-selected_model_name = st.selectbox("Choose your model:", list(MODEL_OPTIONS.keys()))
-selected_model = MODEL_OPTIONS[selected_model_name]
-
-@st.cache_resource
+# ---------------------- LOAD COMPONENTS ----------------------
+@st.cache_resource(show_spinner=True)
 def load_pipeline(model_name):
     loader = DocumentLoader(
         file_path="human-nutrition-text.pdf",
@@ -46,20 +63,25 @@ def load_pipeline(model_name):
 
 embedder, rag_pipeline, doc_chunks, doc_embeddings = load_pipeline(selected_model)
 
-# Initialize chat history
+# ---------------------- CHAT SECTION ----------------------
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# Input
-query = st.chat_input("Ask something about nutrition...")
-if query:
-    query_embedding = embedder.encode([query])
-    answer = rag_pipeline.generate_answer(query, query_embedding, doc_embeddings, doc_chunks)
-    st.session_state.chat_history.append((query, answer))
+st.markdown("""
+### 💬 Chat with NutriBot
+Ask anything related to the nutrition textbook.
+""")
 
-# Display chat
+query = st.chat_input("Type your question here...")
+if query:
+    with st.spinner("NutriBot is thinking..."):
+        query_embedding = embedder.encode([query])
+        answer = rag_pipeline.generate_answer(query, query_embedding, doc_embeddings, doc_chunks, top_k=top_k)
+        st.session_state.chat_history.append((query, answer))
+
+# Display prior chat
 for user_q, bot_a in st.session_state.chat_history:
     with st.chat_message("user"):
-        st.markdown(user_q)
+        st.markdown(f"**You:** {user_q}")
     with st.chat_message("assistant"):
-        st.markdown(bot_a)
+        st.markdown(f"**NutriBot:** {bot_a}")
