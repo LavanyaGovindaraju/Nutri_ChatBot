@@ -1,40 +1,41 @@
 # src/chunker.py
+import spacy
+from tqdm.auto import tqdm
 
-from typing import List
-
-class TextChunker:
+class SentenceChunker:
     """
-    Splits text documents into smaller chunks.
+    Uses spaCy's sentencizer to split text into sentences,
+    then groups them into chunks of fixed size.
     """
 
-    def __init__(self, chunk_size: int = 300, chunk_overlap: int = 50):
+    def __init__(self, chunk_size=10):
         """
         Args:
-            chunk_size (int): Maximum number of words per chunk.
-            chunk_overlap (int): Number of words to overlap between chunks.
+            chunk_size (int): Number of sentences per chunk.
         """
         self.chunk_size = chunk_size
-        self.chunk_overlap = chunk_overlap
+        self.nlp = spacy.blank("en")
+        self.nlp.add_pipe("sentencizer")
 
-    def chunk_text(self, texts: List[str]) -> List[str]:
+    def chunk_pages(self, pages):
         """
-        Splits list of page texts into overlapping chunks.
-        
+        Splits pages into sentence chunks.
+
         Args:
-            texts (List[str]): List of page texts.
-        
+            pages (list): List of dictionaries with "text" fields.
+
         Returns:
-            List[str]: List of chunks.
+            list: Sentence chunks extracted from all pages.
         """
-        chunks = []
-        for text in texts:
-            words = text.split()
-            if len(words) == 0:
-                continue
-            start = 0
-            while start < len(words):
-                end = start + self.chunk_size
-                chunk = " ".join(words[start:end])
-                chunks.append(chunk)
-                start += self.chunk_size - self.chunk_overlap
-        return chunks
+        all_chunks = []
+
+        for page in tqdm(pages, desc="Chunking text"):
+            doc = self.nlp(page["text"])
+            sentences = [sent.text.strip() for sent in doc.sents if sent.text.strip()]
+
+            # Split into chunks of N sentences
+            for i in range(0, len(sentences), self.chunk_size):
+                chunk = " ".join(sentences[i:i + self.chunk_size])
+                all_chunks.append(chunk)
+
+        return all_chunks
