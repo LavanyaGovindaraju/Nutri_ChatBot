@@ -1,47 +1,44 @@
 # src/vector_store.py
-
 import faiss
 import numpy as np
+import torch
 from typing import List, Tuple
 
 class VectorStore:
     """
-    Simple FAISS-based vector store for storing and searching text embeddings.
+    Simple FAISS-based vector store for storing and searching text embeddings,
+    with persistence support.
     """
 
     def __init__(self, embedding_dim: int):
-        """
-        Args:
-            embedding_dim (int): Dimension of the embeddings (e.g., 384 for MiniLM).
-        """
+        self.embedding_dim = embedding_dim
         self.index = faiss.IndexFlatL2(embedding_dim)
         self.texts = []
 
     def add(self, embeddings: np.ndarray, texts: List[str]):
-        """
-        Adds embeddings and corresponding texts to the vector store.
-        
-        Args:
-            embeddings (np.ndarray): Array of embeddings to add.
-            texts (List[str]): Corresponding texts for embeddings.
-        """
         self.index.add(embeddings)
         self.texts.extend(texts)
 
-    def search(self, query_embedding: np.ndarray, top_k: int = 5) -> List[Tuple[str, float]]:
-        """
-        Searches for the top_k most similar texts to the query embedding.
+    def add_tensor(self, embeddings: torch.Tensor, texts: List[str]):
+        self.add(embeddings.cpu().numpy().astype(np.float32), texts)
 
-        Args:
-            query_embedding (np.ndarray): Embedding of the query.
-            top_k (int): Number of top results to return.
-        
-        Returns:
-            List[Tuple[str, float]]: List of (text, similarity_score).
-        """
+    def search(self, query_embedding: np.ndarray, top_k: int = 5) -> List[Tuple[str, float]]:
         distances, indices = self.index.search(query_embedding, top_k)
-        results = []
-        for idx, distance in zip(indices[0], distances[0]):
-            if idx != -1:
-                results.append((self.texts[idx], distance))
-        return results
+        return [
+            (self.texts[idx], distances[0][i])
+            for i, idx in enumerate(indices[0]) if idx != -1
+        ]
+
+    def search_tensor(self, query_embedding: torch.Tensor, top_k: int = 5):
+        return self.search(query_embedding.cpu().numpy().astype(np.float32), top_k)
+
+    def save(self, index_path: str, text_path: str):
+        faiss.write_index(self.index, index_path)
+        with open(text_path, "w", encoding="utf-8") as f:
+            for line in self.texts:
+                f.write(line.replace("\n", " ") + "\n")
+
+    def load(self, index_path: str, text_path: str):
+        self.index = faiss.read_index(index_path)
+        with open(text_path, "r", encoding="utf-8") as f:
+            self.texts = [line.strip() for line in f.readlines()]
