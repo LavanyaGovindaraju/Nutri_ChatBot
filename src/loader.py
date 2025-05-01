@@ -1,59 +1,64 @@
 # src/loader.py
-
-import fitz  # PyMuPDF
 import os
 import requests
-from typing import List
+import fitz  # PyMuPDF
+from tqdm.auto import tqdm
 
 class DocumentLoader:
     """
-    Loads a PDF document (downloads if necessary) and extracts clean text page by page.
+    Loads a PDF document either from a local file or downloads it from a given URL.
+    Parses each page to extract text and calculate various statistics.
     """
 
-    def __init__(self, file_path: str, download_url: str = None):
+    def __init__(self, file_path, download_url=None):
+        """
+        Initializes the DocumentLoader.
+
+        Args:
+            file_path (str): Path to the local PDF file.
+            download_url (str, optional): URL to download the PDF if not found locally.
+        """
         self.file_path = file_path
         self.download_url = download_url
 
-    def download_pdf(self):
+    def download(self):
         """
-        Downloads the PDF file if it does not exist locally.
+        Downloads the PDF from the URL if it doesn't exist locally.
         """
         if not os.path.exists(self.file_path):
             if self.download_url:
-                print(f"[INFO] File {self.file_path} not found. Downloading...")
+                print("[INFO] Downloading PDF...")
                 response = requests.get(self.download_url)
                 if response.status_code == 200:
                     with open(self.file_path, "wb") as f:
                         f.write(response.content)
-                    print(f"[INFO] File downloaded and saved as {self.file_path}.")
+                    print(f"[INFO] Downloaded and saved to {self.file_path}")
                 else:
-                    raise Exception(f"Failed to download file. Status code: {response.status_code}")
+                    raise Exception("Failed to download the file")
             else:
-                raise FileNotFoundError(f"File {self.file_path} not found and no download URL provided.")
+                raise FileNotFoundError(f"File {self.file_path} not found and no URL provided.")
 
-    def text_formatter(self, text: str) -> str:
+    def load(self):
         """
-        Cleans the extracted text by removing unnecessary newlines and spaces.
-        """
-        cleaned_text = text.replace("\n", " ").strip()
-        return cleaned_text
+        Loads and parses the PDF into a list of dictionaries, each representing a page.
 
-    def load(self) -> List[str]:
+        Returns:
+            list: A list of dictionaries containing page content and metadata.
         """
-        Loads the document, formats the text, and returns a list of page texts.
-        """
-        try:
-            self.download_pdf()  # Ensure file is available
+        self.download()
+        doc = fitz.open(self.file_path)
+        pages = []
 
-            doc = fitz.open(self.file_path)
-            pages_text = []
-            for page in doc:
-                text = page.get_text()
-                cleaned_text = self.text_formatter(text)
-                pages_text.append(cleaned_text)
-            doc.close()
-            return pages_text
+        # Iterate through each page and extract structured data
+        for page_number, page in tqdm(enumerate(doc), desc="Reading PDF"):
+            text = page.get_text().replace("\n", " ").strip()
+            pages.append({
+                "page_number": page_number - 41,  # Adjust for nutrition PDF's actual numbering
+                "page_char_count": len(text),
+                "page_word_count": len(text.split()),
+                "page_sentence_count_raw": len(text.split(". ")),
+                "page_token_count": len(text) / 4,  # Approximate token count
+                "text": text
+            })
 
-        except Exception as e:
-            print(f"[ERROR] Failed to load document: {e}")
-            return []
+        return pages
