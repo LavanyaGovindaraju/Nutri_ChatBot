@@ -61,7 +61,7 @@ pip install -r requirements.txt
 
 Launch NutriBot instantly in Colab by clicking the badge below:
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/LavanyaGovindaraju/NutriBot/blob/main/colab_launcher.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://github.com/LavanyaGovindaraju/Nutri_ChatBot/blob/main/colab_nutribot_launcher.ipynb)
 
 ### 🔹 Before You Run
 - **File > Save a copy in Drive** — this allows you to edit and run the notebook freely.
@@ -122,11 +122,9 @@ In the sidebar of the app, choose from the following:
 ---
 
 ## 📸 Screenshots
-
-You can add screenshots below by uploading images to the repo and linking them here:
 ```md
 ![NutriBot Chat Screenshot](screenshots/chat_example.png)
-![Sidebar and Model Selection](screenshots/contex_info.png)
+![Contex Window](screenshots/contex_info.png)
 ```
 
 ---
