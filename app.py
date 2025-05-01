@@ -27,7 +27,7 @@ MODEL_OPTIONS = {
     "TinyLlama (Fastest)": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
     "Phi-2 (Mid-size)": "microsoft/phi-2",
     "Falcon-7B-Instruct (Larger)": "tiiuae/falcon-7b-instruct",
-    # "Mistral-7B-Instruct (Gated)": "mistralai/Mistral-7B-Instruct-v0.1"
+    "Mistral-7B-Instruct (Gated)": "mistralai/Mistral-7B-Instruct-v0.1"
 }
 
 with st.sidebar:
