@@ -1,6 +1,6 @@
 # 🥑 NutriBot: Your Nutrition Assistant
 
-NutriBot is a conversational AI application designed to help users understand and explore a human nutrition textbook using a Retrieval-Augmented Generation (RAG) pipeline. It integrates a Streamlit interface, sentence embedding, FAISS vector search, and LLM-based text generation.
+NutriBot is a conversational AI application designed to help users understand and explore a human nutrition textbook using a Retrieval-Augmented Generation (RAG) pipeline. It integrates a Streamlit interface, sentence embedding, FAISS vector search, and LLM-based text generation- powered with LangChain for more robust context handling and modularity.
 
 ---
 
@@ -11,6 +11,7 @@ NutriBot is a conversational AI application designed to help users understand an
 - 🔍 Embeds chunks using Sentence Transformers.
 - 🧠 Searches relevant context using FAISS.
 - 🤖 Generates answers using your selected Hugging Face LLM.
+- 🔗 Enhanced retrieval + reasoning using LangChain.
 - 💬 Continuous chatbot interface using Streamlit.
 - 🔐 Hugging Face + ngrok token-based secure deployment.
 
@@ -28,7 +29,7 @@ NutriBot/
 │   ├── loader.py             # PDF downloading and text extraction
 │   ├── chunker.py            # Sentence splitting and chunking
 │   ├── embedder.py          # Sentence embeddings via HF models
-│   ├── rag_pipeline.py       # FAISS search + LLM answer generation
+│   ├── langchain_pipeline.py # LangChain-powered RAG pipeline
 │   └── vector_store.py       # FAISS-based vector index management
 ```
 
@@ -46,6 +47,7 @@ This includes:
 - GPU-enabled PyTorch (CUDA 12.1)
 - FAISS-CPU for stable vector search
 - LLM and NLP libraries
+- LangChain for orchestrated RAG
 - Streamlit + ngrok for UI and tunneling
 
 Install everything in one go:
@@ -111,9 +113,9 @@ In the sidebar of the app, choose from the following:
 4. **Vector Store** (`vector_store.py`)
    - FAISS index built over embeddings for fast similarity search.
 
-5. **RAG Pipeline** (`rag_pipeline.py`)
-   - Retrieves top-k chunks using cosine similarity.
-   - Passes retrieved context + user query to LLM for final response.
+5. **RAG Pipeline** (`langchain_pipeline.py`)
+   - Uses LangChain to retrieve top-k chunks and pass them to the LLM.
+   - Source documents are returned alongside the answer.
 
 6. **Streamlit UI** (`app.py`)
    - Displays chat history in a modern conversational layout.
@@ -122,10 +124,9 @@ In the sidebar of the app, choose from the following:
 ---
 
 ## 📸 Screenshots
-```md
+
 ![NutriBot Chat Screenshot](screenshots/chat_example.png)
-![Contex Window](screenshots/contex_info.png)
-```
+![Contex Window](screenshots/context_info.png)
 
 ---
 
