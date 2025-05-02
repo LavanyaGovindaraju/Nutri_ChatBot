@@ -1,21 +1,22 @@
 # CUDA-enabled PyTorch stack (CUDA 12.1)
 torch
 torchvision
---extra-index-url https://download.pytorch.org/whl/cu121
+--extra-index-url https://download.pytorch.org/whl/cu124
 
 # FAISS (CPU version)
-faiss-cpu
+faiss-cpu==1.11.0
 
 # LLM and RAG dependencies
-transformers
-sentence-transformers
-streamlit
-pyngrok
-accelerate
+transformers==4.51.3
+sentence-transformers==3.4.1
+streamlit==1.45.0
+pyngrok==7.2.5
+accelerate==1.6.0accelerate
 
 # PDF handling
-PyMuPDF
+PyMuPDF==1.25.5
 
 # Ensure compatibility with LangChain retrievers
-huggingface-hub
-langchain
+huggingface-hub==0.30.2
+langchain==0.3.24
+langchain-community==0.3.23
