@@ -57,12 +57,10 @@ def load_pipeline(model_name):
         chunks, embeddings = embedder.load_embeddings()
         embeddings = embeddings.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
-    rag = RAGPipeline(model_name=model_name, use_faiss=True, faiss_index_path="faiss.index")
+    rag = RAGPipeline(model_name=model_name, faiss_index_path="faiss.index")
     return embedder, rag, chunks, embeddings
 
 embedder, rag_pipeline, doc_chunks, doc_embeddings = load_pipeline(selected_model)
-
-# ---------------------- CHAT SECTION ----------------------
 
 # ---------------------- CHAT SECTION ----------------------
 if "chat_history" not in st.session_state:

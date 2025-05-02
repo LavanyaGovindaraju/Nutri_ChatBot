@@ -9,6 +9,7 @@ from transformers import pipeline as hf_pipeline
 import torch
 import os
 from typing import Tuple, List
+from pathlib import Path
 
 class RAGPipeline:
     """
@@ -37,18 +38,32 @@ class RAGPipeline:
 
         # Load embeddings and FAISS vector store
         self.embedder = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-        self.vectorstore = FAISS.load_local(faiss_index_path, self.embedder)
+        index_dir = Path(faiss_index_path)
+        if not index_dir.exists():
+            print(f"[INFO] FAISS index not found at {faiss_index_path}. Creating new one...")
+            from src.embedder import TextEmbedder
+            loader = TextEmbedder()
+            chunks, embeddings = loader.load_embeddings()
+            self.vectorstore = FAISS.from_texts(chunks, self.embedder)
+            self.vectorstore.save_local(faiss_index_path)
+        else:
+            self.vectorstore = FAISS.load_local(
+                faiss_index_path,
+                self.embedder,
+                allow_dangerous_deserialization=True
+            )
 
         # Optional memory to retain chat history
-        self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+        self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True, output_key="answer")
 
         # Build LangChain's Conversational RAG pipeline
         self.qa_chain = ConversationalRetrievalChain.from_llm(
-            llm=self.llm,
-            retriever=self.vectorstore.as_retriever(search_kwargs={"k": 3}),
-            memory=self.memory,
-            return_source_documents=True
-        )
+          llm=self.llm,
+          retriever=self.vectorstore.as_retriever(search_kwargs={"k": 3}),
+          memory=self.memory,
+          return_source_documents=True,
+          output_key="answer"
+      )
 
     def chat(self, query: str) -> Tuple[str, List[str]]:
         """

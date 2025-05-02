@@ -17,7 +17,12 @@ class TextEmbedder:
             device (str, optional): Force 'cuda' or 'cpu'. Defaults to auto-detection.
         """
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
-        self.model = SentenceTransformer(model_name, device=self.device)
+        try:
+            self.model = SentenceTransformer(model_name, device=self.device)
+        except NotImplementedError:
+            # Safe fallback for meta tensor issue
+            self.model = SentenceTransformer(model_name)  # no device param
+            print("⚠️ Falling back to CPU mode due to meta tensor issue.")
 
     def encode(self, texts):
         """
