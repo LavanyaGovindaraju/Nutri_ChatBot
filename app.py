@@ -5,7 +5,7 @@ import torch
 from src.loader import DocumentLoader
 from src.chunker import SentenceChunker
 from src.embedder import TextEmbedder
-from src.rag_pipeline import RAGPipeline
+from src.langchain_pipeline import RAGPipeline
 
 # ---------------------- UI CONFIGURATION ----------------------
 st.set_page_config(
@@ -63,6 +63,8 @@ def load_pipeline(model_name):
 embedder, rag_pipeline, doc_chunks, doc_embeddings = load_pipeline(selected_model)
 
 # ---------------------- CHAT SECTION ----------------------
+
+# ---------------------- CHAT SECTION ----------------------
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
@@ -74,9 +76,7 @@ Ask anything related to the nutrition textbook.
 query = st.chat_input("Type your question here...")
 if query:
     with st.spinner("NutriBot is thinking..."):
-        query_embedding = embedder.encode([query])
-        answer = rag_pipeline.generate_answer(query, query_embedding, doc_embeddings, doc_chunks, top_k=top_k)
-        retrieved_contexts = rag_pipeline.retrieve(query_embedding, doc_embeddings, doc_chunks, top_k=top_k)
+        answer, retrieved_contexts = rag_pipeline.chat(query)
         st.session_state.chat_history.append((query, answer, retrieved_contexts))
 
 # Display prior chat
@@ -85,7 +85,8 @@ for user_q, bot_a, contexts in st.session_state.chat_history:
         st.markdown(f"**You:** {user_q}")
     with st.chat_message("assistant"):
         st.markdown(f"**NutriBot:** {bot_a}")
-        with st.expander("🔍 Show retrieved context"):
-            for i, ctx in enumerate(contexts):
-                short_ctx = ctx[:400] + "..." if len(ctx) > 400 else ctx
-                st.markdown(f"<div style='margin-bottom:1em;padding:0.5em;border-left:3px solid #4CAF50;background-color:#f9f9f9;'> <b>Context {i+1}:</b><br>{short_ctx}</div>", unsafe_allow_html=True)
+        if contexts:
+            with st.expander("🔍 Show retrieved context"):
+                for i, ctx in enumerate(contexts):
+                    short_ctx = ctx[:400] + "..." if len(ctx) > 400 else ctx
+                    st.markdown(f"<div style='margin-bottom:1em;padding:0.5em;border-left:3px solid #4CAF50;background-color:#f9f9f9;'> <b>Context {i+1}:</b><br>{short_ctx}</div>", unsafe_allow_html=True)
