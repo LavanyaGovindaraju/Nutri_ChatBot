@@ -13,5 +13,9 @@ streamlit
 pyngrok
 accelerate
 
-# Utility packages
+# PDF handling
 PyMuPDF
+
+# Ensure compatibility with LangChain retrievers
+huggingface-hub
+langchain
